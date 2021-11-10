@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 num = 1000
 
@@ -109,6 +110,10 @@ def GprobDenFunc(data, mu_v, sigma_v):
             index = diff @ inv @ diff.T * (-1 / 2)
             row.append(np.linalg.det(index))
         p.append(coefficient * np.exp(np.array(row)))
+        a = np.array(row)
+        b = np.exp(a)
+        c = coefficient*b
+        d = np.array(p)
     return np.array(p)
 
 
@@ -202,14 +207,44 @@ def externalIndex(ref, clu_i):
     return jaccard, fm, ri
 
 
+def creFromUCI():
+    df = pd.read_csv('sourses/iris.data.csv')
+    mt = df.to_numpy()
+    # m, num_attribute = mt.shape
+    x_mt = mt[..., :4].astype("float")
+    y_v = mt[..., -1]
+    ref_v = list(y_v)
+
+    for i in range(y_v.shape[0]):
+        if y_v[i] == "Iris-setosa":
+            ref_v[i] = 0
+        elif y_v[i] == "Iris-versicolor":
+            ref_v[i] = 1
+        else:
+            ref_v[i] = 2
+    ref_v = np.array(ref_v).reshape(y_v.shape[0], 1)
+    return x_mt, ref_v
+
+
+def tesUCI():
+    # use UCI
+    data_sam, ref_sam = creFromUCI()
+    clu_index_sam = k_means(data_sam, 3)
+    external = externalIndex(ref_sam, clu_index_sam)
+    print(f"JC: {external[0]}\nFMI: {external[1]}\nRI: {external[2]}")
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    data_sam, ref_sam = creSamples(num)
-
-    clu_index_sam = k_means(data_sam, 4)
-    draw(data_sam, clu_index_sam, externalIndex(ref_sam, clu_index_sam))
+    # manual generation
+    # data_sam, ref_sam = creSamples(num)
+    #
+    # clu_index_sam = k_means(data_sam, 4)
+    # draw(data_sam, clu_index_sam, externalIndex(ref_sam, clu_index_sam))
 
     # clu_index_sam = expectationMaximization(data_sam, 4, 100)
     # draw(data_sam, clu_index_sam, externalIndex(ref_sam, clu_index_sam))
 
-    plt.show()
+    # plt.show()
+
+    tesUCI()
